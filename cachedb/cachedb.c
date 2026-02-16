@@ -724,6 +724,13 @@ cachedb_intcache_lookup(struct module_qstate* qstate, struct cachedb_env* cde)
 	}
 	if(!msg)
 		return 0;
+	/* fixup flags to be sensible for a reply based on the cache.
+	 * This module means that RA is available. It is an answer QR.
+	 * Not AA from cache. Not CD in cache (depends on client bit).
+	 * This is needed because val_neg_getmsg() synthesizes messages
+	 * with dns_msg_create() which only sets BIT_QR, missing BIT_RA. */
+	msg->rep->flags |= (BIT_RA | BIT_QR);
+	msg->rep->flags &= ~(BIT_AA | BIT_CD);
 	/* this is the returned msg */
 	qstate->return_rcode = LDNS_RCODE_NOERROR;
 	qstate->return_msg = msg;
